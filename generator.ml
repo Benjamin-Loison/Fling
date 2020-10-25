@@ -8,7 +8,7 @@ let generator_0 n =
             if i = 0 then ballList
             else
             (
-                let y = Random.int (*Game.max_y*)15 and x = Random.int (*Game.max_x*)15 in
+                let y = Random.int AntiCircularBuild.max_y and x = Random.int AntiCircularBuild.max_x in
                 let pos = Position.from_int x y in
                 if List.mem (Rules.make_ball pos) ballList then
                     aux i ballList
@@ -21,8 +21,8 @@ let generator_0 n =
         done;
         Rules.new_game !game;;
 
-let configs_direct_previous game =
-    ()
+(*let configs_direct_previous game =
+    ()*)
 
 (* this one seems slow if we take randomly any possible configuration but if we take the first one it is done in a quite constant time but this isn't the idea of the question I suppose *)
 (*let generator_1 n = (* on préfère le récursif: faire des let rec au lieu de while ? *)

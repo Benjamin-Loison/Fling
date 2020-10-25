@@ -1,9 +1,6 @@
 module G = Graphics
 module D = Draw
 
-(* max width/height of the grid printed *)
-let max_x = 15 and max_y = 15
-
 (* game is a reference to the initial game. *)
 let game = ref (Rules.new_game [])
 
@@ -53,7 +50,7 @@ let get_next_move game =
 (* create_game allows the player to create its own game by putting balls over the grid *)
 let create_game () =
   D.ready false;
-  D.draw_game max_x max_y (Rules.new_game []);
+  D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y (Rules.new_game []);
   let rec add_balls l =
     let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
     if status.G.keypressed = true && Char.chr (Char.code status.G.key) = 'e' then
@@ -63,7 +60,7 @@ let create_game () =
       let p = D.position_of_coord x y in
       let (x',y') = Position.proj_x p, Position.proj_y p in
       (* balls can not be outside the grid *)
-      if 0 <= x' && x' < max_x && 0 <= y' && y' < max_y then
+      if 0 <= x' && x' < AntiCircularBuild.max_x && 0 <= y' && y' < AntiCircularBuild.max_y then
         let ball = Rules.make_ball p in
         D.draw_ball ball;
         add_balls (ball::l)
@@ -73,6 +70,7 @@ let create_game () =
   let balls = add_balls [] in
   Rules.new_game balls
 
+(* only Neven was enoughly deteminated to make a textfield with tabulation *)
 let defaultTerrainFileName = "terrain.txt"
 
 (* A menu is a pair of string * f where f is a function of type unit -> unit.
@@ -80,85 +78,93 @@ let defaultTerrainFileName = "terrain.txt"
 let rec menu = [("solve", solve); ("solve random", solveRandom); ("solve from file", solveFromFile); ("play", play); ("play random", playRandom); ("play from file", playFromFile); ("modify terrain.txt", modifyTerrain); ("exit", leave)]
 (* it should be better to choose playground by option and not both in one *)
 
+(* need ball ids and this function to be called in order to have color stability *)
+and make_colors_stable game =
+    D.colors := [];
+    D.ready false;
+    D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y game;
+    D.ready true;
+
 (* play allows the player to create a new game, and then try to solve it *)
 and play () =
   game := create_game ();
   loop !game
 
 and playRandom () =
-    game := Generator.generator_0 10;
+    game := Generator.generator_0 8;
+    make_colors_stable !game;
     loop !game
 
 and playFromFile () =
     game := File.opn defaultTerrainFileName;
+    make_colors_stable !game;
     loop !game
 
 (* solve allows the player to create a new game and then see if the game can be solved *)
 and solve () =
   game := create_game ();
-  solver !game
+  solver !game;
 
 and solveRandom () =
-    game := Generator.generator_0 10; (* should make a user input for this *)
-    solver !game
+    game := Generator.generator_0 8; (* should make a user input for this *)
+    make_colors_stable !game;
+    solver !game;
 
 and solveFromFile () =
     game := File.opn defaultTerrainFileName;
-    solver !game
+    make_colors_stable !game;
+    solver !game;
 
 and modifyTerrain () =
     game := create_game ();
     (* could also make a modification possibility but this needs to implement delete option *)
     File.save "terrain.txt" !game
 
-and isWin game =
-   List.length (Rules.get_balls game) <= 1
-
 (* loop game loops on the game while their is still moves possible for the player *)
 and loop game =
-  let currentGame = ref game and mvs = ref (Rules.moves game) in
+  let currentGame = ref game and mvs = ref (Rules.moves game true) in
   while ((!mvs) <> []) do
   (
-      D.draw_game max_x max_y !currentGame; (* required for terrain editing and various options like loading from file... *)
+      D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y !currentGame; (* required for terrain editing and various options like loading from file... *)
       let ball = get_ball (!currentGame) and dir = get_ball_direction () in
         let mv = (Rules.make_move ball dir) in
           if (List.mem mv (!mvs)) then (* here we check if the input move is correct *)
           (
               currentGame := (Rules.apply_move (!currentGame) mv);
-              mvs := Rules.moves (!currentGame)
+              mvs := Rules.moves (!currentGame) true
           )
           else
           (
-              mvs := Rules.moves (!currentGame)
+              mvs := Rules.moves (!currentGame) true
           );
-          D.draw_game max_x max_y !currentGame
+          D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y !currentGame
   )
   done;
-  if ((*Solver.*)isWin !currentGame) then
+  if (AntiCircularBuildRules.is_win !currentGame) then
       print_string "You win !"
   else
       print_string "You lose !";
 
 (* solver game solve the game if it is possible *)
 and solver game =
-  D.draw_game max_x max_y game;
+  D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y game;
   let moves = Solver.solve game in
   match moves with
   | None -> D.draw_string "No solution!"; get_key_pressed (fun c -> main menu)
   | Some moves ->
-    let g = List.fold_left (fun g m -> D.draw_game max_x max_y g ;
+    let g = List.fold_left (fun g m -> D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y g ;
                              D.draw_string "Solved!";
                              get_key_pressed (fun c -> ());
                              Rules.apply_move g m) game moves
     in
-    D.draw_game max_x max_y g;
+    D.draw_game AntiCircularBuild.max_x AntiCircularBuild.max_y g;
     get_key_pressed (fun c -> main (("resolve", resolve)::menu))
 
 (* replay the previous game *)
 and replay () =
   loop !game
 
-(* resolve the preivous game *)
+(* resolve the previous game *)
 and resolve () =
   solver !game
 

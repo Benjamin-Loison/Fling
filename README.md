@@ -1,5 +1,3 @@
-Lorsque le jeu est terminé car la partie est gagnée ou perdue (plus de mouvement possible), le programme s'arrête et affiche dans la console le résultat de la partie.
-
 Des précisions sur certaines questions:
 ---------------------------------------
 
@@ -21,30 +19,19 @@ Faire du débogage avec des print ne fonctionnaient qu'à condition d'utiliser a
 
 Ayant beaucoup travaillé avec gcc, passer sur un compilateur qui indique en cas de faute syntaxique seulement "Syntax error" alors que gcc dirait plutôt quelque chose comme "Syntax error: was expecting a ')' while found ';'", ce qui a été prise de tête par moment.
 
-Le correcteur pourra apprécier la possibilité de copier un terrain donné du dossier terrains (voir les exemples du sujet) dans fling en le renommant dans le dossier principale en "terrain.txt"
+Contrairement à par exemple le Java, l'ordre des lignes de code importe, on ne peut pas utiliser quelque chose avant de l'avoir déclaré. De même deux fichiers qui s'utilisent l'un l'autre impliquent une impossibilité de compilation, pour résoudre ce problème j'ai crée deux fichiers antiCircularBuilds*.ml ne trouvant pas de meilleurs manières de faire.
 
-TO FINISH:
+Appendice:
 ----------
 
-file inversed lines
+Lorsque le jeu est terminé car la partie est gagnée ou perdue (plus de mouvement possible), le programme s'arrête et affiche dans la console le résultat de la partie. On aurait aussi pu faire un retour au menu comme le fait les options "solve*".
 
-circular build
+Le correcteur pourra apprécier la possibilité de copier un terrain donné du dossier terrains (voir les exemples du sujet) dans fling en le renommant dans le dossier principale en "terrain.txt"
 
-quick solve
+Le code et ses commentaires ont été rédigés en anglais afin de ne pas tomber dans un "franglais" désagréable à lire
 
-stupid(and not version) generators ?
+Ligne 117 du game.ml par défaut on remarquera la coquille "resolve the preivous game"
+On pourra aussi remarquer que dans le rules.mli ligne 21 "[make_move b d]" tandis que dans rules.ml ligne 15, le b devient un p "let make_move p d ="
 
-doc ?
-
-more comment ? on not asked functions
-
-Q3 bonus
-
-Q8 move direction
-
-find bugs
-
-N-dim
-
-fonctionnel over imperatif ?
-
+La partie animation du déplacement des balles (question 8) et le bonus de la question 3 ont été éludées par manque de temps. Toutefois quelques éléments de réponse pour optimiser le solveur ont été écrits dans solver.ml
+On pourra admettre qu'il y a toujours une instabilité sur les couleurs lors de la résolution d'une partie et qu'à partir de l'exemple 6 le solveur met trop de temps...

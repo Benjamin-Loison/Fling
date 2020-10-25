@@ -23,3 +23,5 @@ val ready : bool -> unit
 
 (** [draw_string s] draws the string [s] at the top of the board *)
 val draw_string : string -> unit
+
+val colors : (Graphics.color * Rules.ball) list ref

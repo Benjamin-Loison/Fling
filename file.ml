@@ -18,7 +18,7 @@ let get_file_content file =
         done; !lines
     with End_of_file ->
         close_in chan;
-        List.rev !lines;;
+        !lines;;
 
 (* for a given line, this function returns the associated list of balls *)
 let rec ballFromLine l x y ballList = match l with
@@ -41,8 +41,8 @@ let write oc c = Printf.fprintf oc "%c" c
 (* this function opens a file stream, write at each slot of the grid if there is a ball and closes the file stream *)
 let save file game =
     let oc = open_out file in 
-    for y = 1 to (*Game.max_y*)15 do
-        for x = 1 to (*Game.max_y*)15 do
+    for y = AntiCircularBuild.max_y - 1 downto 0 do (* using fonctionnal programming here instead of imperative one doesn't seem accurate *)
+        for x = 0 to AntiCircularBuild.max_y - 1 do
             if Rules.is_ball game (Position.from_int x y) then
                 write oc '1'
             else

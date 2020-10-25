@@ -33,24 +33,26 @@ let next p d = let x = Position.proj_x p and y = Position.proj_y p in
     | Left -> Position.from_int (x - 1) y
     | Right -> Position.from_int (x + 1) y
 
+(* intermediary function *)
 let next move = next move.movePos move.moveDir
 
-let contrary dir = let contraryDir = match dir with
+(* this function returns the opposite direction of a given one *)
+let contrary dir = match dir with
     | Up -> Down
     | Left -> Right
     | Down -> Up
     | Right -> Left
-    in contraryDir
 
+(* this function returns a previous Position.t from a given move *)
 let previous p d = next (make_move (make_ball p) (contrary d))
 
-(* otherwise circular build *)
-let is_out p = let x = Position.proj_x(*fst*) p and y = Position.proj_y(*snd*) p in
-    (* should check if not +/- 1 *)
-    x > (*Game.max_x*)15 || x < 0 || y > (*Game.max_y*)15 || y < 0
+(* check whether or not the Position.t p is in the grid or not *)
+let is_out p = let x = Position.proj_x p and y = Position.proj_y p in
+    x > AntiCircularBuild.max_x || x < 0 || y > AntiCircularBuild.max_y || y < 0
 
 let get_balls g = g.ballList
 
+(* algorithm comparable to remove an element from a list (because here a game is in fact a ball list) *)
 let remove_ball game position =
     let rec aux ballList = match ballList with
     | t::q when Position.eq (position_of_ball t) position -> aux q
@@ -58,6 +60,7 @@ let remove_ball game position =
     | _ -> []
     in new_game (aux (get_balls game))
 
+(* adding a ball to game is just append a given ball to a ball list (here we keep ball id) *)
 let add_ball game position ballId =
     new_game ((make_ball_with_id position ballId)::(get_balls game))
 
@@ -66,9 +69,10 @@ let ball_of_position g p =
     let rec aux l = match l with
     | t::q when Position.eq (position_of_ball t) p -> t
     | t::q -> aux q
-    | _ -> failwith "Function ball_of_position was designed to be called on a existing object" (* use is_ball before the use of this function if not sure of its use *)
+    | _ -> (*List.hd (get_balls g)*) failwith "Function ball_of_position was designed to be called on a existing object" (* use is_ball before the use of this function if not sure of its use *)
     in aux (get_balls g)
 
+(* here we modify ball position while taking care of keeping the ball id in order to keep color stability *)
 let modify_ball game position newPosition =
     let ballId = (ball_of_position game position).ballId and currentGame = ref (remove_ball game position) in
         add_ball !currentGame newPosition ballId
@@ -84,7 +88,7 @@ let is_ball g p =
 (* we are going to proceed one ball by one ball from an origin of the movement to the edge of the grid according to the good direction *)
 let apply_move g move =
     let currentGame = ref g and initialPos = ref move.movePos and tmpPos = ref (next move) in
-    while ((not ((*Game.*)(*AntiCircularBuild.*)is_out (!tmpPos)))) do
+    while ((not (is_out (!tmpPos)))) do
     (
         if is_ball !currentGame !tmpPos then
         (
@@ -112,39 +116,39 @@ let is_ball_in_view move b = let ballPos = position_of_ball b in
 let is_a_ball_in_view g move = List.exists (is_ball_in_view move) (get_balls g)
 
 (* for a given move, check if there is a ball in the direction at least 2 slots from the origin of the move (cf 2.1 §2 "Deux boules côte à côte ne peuvent pas se lancer l'une l'autre") *)
-let is_move_correct g move =
+let is_move_correct g move first =
     let nextPos = next move in
-    is_ball g move.movePos && not (is_ball g nextPos) && is_a_ball_in_view g {movePos = nextPos; moveDir = move.moveDir}
+    is_ball g move.movePos && (if first then (not (is_ball g nextPos)) else true) && is_a_ball_in_view g {movePos = nextPos; moveDir = move.moveDir}
 
-let is_move_correct_dir g b dir = is_move_correct g (make_move b dir)
+let is_move_correct_dir g b dir first = is_move_correct g (make_move b dir) first
 
 (* returns a list of all possible direction for a given ball *)
-let get_directions_correct g b =
+let get_directions_correct g b first =
     let l = ref [] in
-    if is_move_correct_dir g b Up then
+    if is_move_correct_dir g b Up first then
         l := Up::!l;
-    if is_move_correct_dir g b Down then
+    if is_move_correct_dir g b Down first then
         l := Down::!l;
-    if is_move_correct_dir g b Left then
+    if is_move_correct_dir g b Left first then
         l := Left::!l;
-    if is_move_correct_dir g b Right then
+    if is_move_correct_dir g b Right first then
         l := Right::!l;
     !l;;
 
 (* returns a list of all possible moves for a given ball *)
-let get_moves_correct g b =
-    let l = get_directions_correct g b in
+let get_moves_correct g b first =
+    let l = get_directions_correct g b first in
     let rec aux ll acc = match ll with
     | t::q -> aux q ((make_move b t)::acc)
     | _ -> acc
     in aux l [];;
 
 (* given a ballList we retrieve all possible movements from them *)
-let moves g =
+let moves g first =
     let rec aux ballList acc =
         match ballList with
         | t::q ->
-                  let eDirs = get_moves_correct g t in
+                  let eDirs = get_moves_correct g t first in
                     if eDirs <> [] then (aux q (eDirs@acc)) else aux q acc
         | _ -> acc
     in aux (get_balls g) []

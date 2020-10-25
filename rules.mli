@@ -23,7 +23,7 @@ val make_move : ball -> direction -> move
 val apply_move : game -> move -> game
 
 (** [moves game] returns all the valid moves possible for [game] *)
-val moves : game -> move list
+val moves : game -> bool -> move list
 
 (** [get_balls game] returns the current list of ball on the [game] *)
 val get_balls : game -> ball list
