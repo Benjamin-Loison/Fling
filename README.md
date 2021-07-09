@@ -35,3 +35,5 @@ On pourra aussi remarquer que dans le rules.mli ligne 21 "[make_move b d]" tandi
 
 La partie animation du déplacement des balles (question 8) et le bonus de la question 3 ont été éludées par manque de temps. Toutefois quelques éléments de réponse pour optimiser le solveur ont été écrits dans solver.ml
 On pourra admettre qu'il y a toujours une instabilité sur les couleurs lors de la résolution d'une partie et qu'à partir de l'exemple 6 le solveur met trop de temps...
+
+![alt text](https://github.com/Benjamin-Loison/Fling/raw/main/Fling.jpg)
