@@ -37,5 +37,3 @@ La partie animation du déplacement des balles (question 8) et le bonus de la qu
 On pourra admettre qu'il y a toujours une instabilité sur les couleurs lors de la résolution d'une partie et qu'à partir de l'exemple 6 le solveur met trop de temps...
 
 ![alt text](https://github.com/Benjamin-Loison/Fling/raw/main/Fling.jpg)
-
-e
